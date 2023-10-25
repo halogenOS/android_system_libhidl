@@ -940,6 +940,7 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
 
         if (waiter != nullptr) {
             if (isServiceInWaitSkipList(descriptor)) {
+                ALOGI("getService: service %s is in wait skip list, not waiting for it, good luck!", descriptor.c_str());
                 // Pretend like we timed out and just keep going
                 break;
             }
