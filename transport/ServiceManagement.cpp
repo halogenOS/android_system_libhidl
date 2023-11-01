@@ -20,7 +20,6 @@
 #include <android/dlext.h>
 #endif  // __ANDROID__
 
-#include <algorithm>
 #include <condition_variable>
 #include <dlfcn.h>
 #include <dirent.h>
@@ -855,15 +854,6 @@ bool handleCastError(const Return<bool>& castReturn, const std::string& descript
     return false;
 }
 
-static std::vector<std::string> getSkipWaitForServicesList() {
-    return base::Tokenize(base::GetProperty("ro.hidl.transport.service.wait.skiplist", ""), ", ");
-}
-
-static bool isServiceInWaitSkipList(const std::string& serviceDescriptor) {
-    auto skipList = getSkipWaitForServicesList();
-    return std::find(skipList.begin(), skipList.end(), serviceDescriptor) != skipList.end();
-}
-
 sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& descriptor,
                                                              const std::string& instance,
                                                              bool retry, bool getStub) {
@@ -939,11 +929,6 @@ sp<::android::hidl::base::V1_0::IBase> getRawServiceInternal(const std::string& 
         if (vintfLegacy || !retry) break;
 
         if (waiter != nullptr) {
-            if (isServiceInWaitSkipList(descriptor)) {
-                ALOGI("getService: service %s is in wait skip list, not waiting for it, good luck!", descriptor.c_str());
-                // Pretend like we timed out and just keep going
-                break;
-            }
             ALOGI("getService: Trying again for %s/%s...", descriptor.c_str(), instance.c_str());
             waiter->wait(true /* timeout */);
         }
